@@ -1,3 +1,7 @@
+DROP VIEW IF EXISTS avg_temp_por_dispositivo;
+DROP VIEW IF EXISTS leituras_por_hora;
+DROP VIEW IF EXISTS temp_max_min_por_dia;
+
 CREATE VIEW avg_temp_por_dispositivo AS
 SELECT device_id, AVG(temperature) as avg_temp
 FROM temperature_readings

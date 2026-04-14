@@ -2,9 +2,9 @@
 
 ## 📌 Sobre o Projeto
 
-Este projeto tem como objetivo construir um **pipeline de dados completo** para processamento de informações provenientes de dispositivos IoT (sensores de temperatura).
+Este projeto implementa um **pipeline de dados completo** para processamento de informações provenientes de dispositivos IoT (sensores de temperatura).
 
-A solução envolve a ingestão, processamento, armazenamento e visualização de dados utilizando tecnologias modernas de Big Data.
+A solução realiza ingestão, processamento, armazenamento e visualização dos dados utilizando tecnologias modernas de Big Data.
 
 ---
 
@@ -34,27 +34,40 @@ Desenvolver um pipeline capaz de:
 
 ## 📁 Estrutura do Projeto
 
-```bash
+```
 iot-pipeline/
 │
-├── data/                  # Base de dados (CSV)
-├── src/                   # Scripts Python
+├── data/                  
+├── src/                   
 │   ├── ingest.py
 │   ├── database.py
 │   └── views.sql
 │
-├── dashboard/             # Aplicação Streamlit
+├── dashboard/             
 │   └── dashboard.py
 │
-├── docker/                # Configuração do PostgreSQL
+├── docker/                
 │   └── docker-compose.yml
 │
-├── docs/                  # Documentação
-│   └── relatorio.pdf
+├── docs/                  
+│   └── relatorio_iot_pipeline.pdf
 │
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## ▶️ Demonstração
+
+📊 Dashboard em execução:
+
+![Dashboard](docs/print_dashboard.jpeg)
+![Dashboard](docs/print_inicial.png)
+![Dashboard](docs/print_media.png)
+![Dashboard](docs/print_temperatura.png)
+
+> Caso a imagem não apareça, execute o projeto localmente.
 
 ---
 
@@ -63,7 +76,7 @@ iot-pipeline/
 ### 🔹 1. Clonar o repositório
 
 ```bash
-git clone <https://github.com/Jackson9008/iot-pipeline.git>
+git clone https://github.com/Jackson9008/iot-pipeline.git
 cd iot-pipeline
 ```
 
@@ -72,9 +85,7 @@ cd iot-pipeline
 ### 🔹 2. Subir o banco de dados (Docker)
 
 ```bash
-cd docker
-docker compose up -d
-cd ..
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ---
@@ -87,7 +98,7 @@ pip install -r requirements.txt
 
 ---
 
-### 🔹 4. Inserir dados no banco
+### 🔹 4. Executar o pipeline (ingestão + criação de views)
 
 ```bash
 cd src
@@ -95,46 +106,14 @@ python ingest.py
 cd ..
 ```
 
----
-
-### 🔹 5. Criar as Views SQL
-
-```bash
-python -c "
-from sqlalchemy import create_engine, text
-
-engine = create_engine('postgresql://iot_user:iot_pass@localhost:5432/iot_db')
-
-queries = [
-'''CREATE VIEW avg_temp_por_dispositivo AS
-SELECT device_id, AVG(temperature) as avg_temp
-FROM temperature_readings
-GROUP BY device_id;''',
-
-'''CREATE VIEW leituras_por_hora AS
-SELECT EXTRACT(HOUR FROM timestamp) as hora,
-COUNT(*) as contagem
-FROM temperature_readings
-GROUP BY hora;''',
-
-'''CREATE VIEW temp_max_min_por_dia AS
-SELECT DATE(timestamp) as data,
-MAX(temperature) as temp_max,
-MIN(temperature) as temp_min
-FROM temperature_readings
-GROUP BY data;'''
-]
-
-with engine.connect() as conn:
-    for q in queries:
-        conn.execute(text(q))
-    conn.commit()
-"
-```
+> ✔ Este comando já:
+>
+> * Insere os dados no banco
+> * Cria automaticamente as views
 
 ---
 
-### 🔹 6. Executar o Dashboard
+### 🔹 5. Executar o Dashboard
 
 ```bash
 python -m streamlit run dashboard/dashboard.py
@@ -198,8 +177,7 @@ Dataset utilizado:
 ## 📌 Autor
 
 **Jackson Sousa**
-   Jr DevOps 
-
+Jr DevOps / Cloud
 
 ---
 

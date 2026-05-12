@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 st.set_page_config(page_title="Dashboard IoT", layout="wide")
 
-engine = create_engine('postgresql://iot_user:iot_pass@localhost:5432/iot_db')
+engine = create_engine('postgresql://iot_user:iot_pass@postgres:5432/iot_db')
 
 def load_data(view):
     try:

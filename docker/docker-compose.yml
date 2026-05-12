@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15
@@ -6,5 +8,21 @@ services:
       POSTGRES_USER: iot_user
       POSTGRES_PASSWORD: iot_pass
       POSTGRES_DB: iot_db
+    # Removi a porta 5432 do mundo externo por SEGURANÇA (DevSecOps)
+    # O dashboard vai continuar acessando internamente.
+
+  dashboard:
+    build: .
+    container_name: streamlit-app
     ports:
-      - "5432:5432"
+      - "8501:8501"
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=iot_db
+      - DB_USER=iot_user
+      - DB_PASS=iot_pass
+    depends_on:
+      - postgres
+
+      # No docker-compose, altere o comando do dashboard:
+    command: streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false

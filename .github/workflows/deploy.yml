@@ -1,0 +1,57 @@
+name: CI/CD IoT Pipeline - DevOps & Sec
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  security-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do código para que o GitHub possa ler seus arquivos
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. DEVSECOPS: Scanner de segurança na imagem Docker ou dependências
+      # Isso verifica se o seu Python ou bibliotecas têm brechas conhecidas.
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs' # Escaneia o sistema de arquivos do projeto
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0' # Mude para '1' se quiser travar o deploy caso ache falhas graves
+
+      # 3. DEPLOY: Conecta na AWS e atualiza o serviço
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Script que será executado dentro da sua máquina na AWS
+          script: |
+            # Instalar Docker e Git caso não existam (comum em instâncias novas)
+            if ! [ -x "$(command -v docker)" ]; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io docker-compose git
+              sudo systemctl start docker
+              sudo usermod -aG docker $USER
+            fi
+
+            # Gerenciar a pasta do projeto
+            if [ ! -d "iot-pipeline" ]; then
+              git clone https://github.com/Jackson9008/iot-pipeline.git
+              cd iot-pipeline
+            else
+              cd iot-pipeline
+              git pull origin main
+            fi
+
+            # Subir a aplicação usando o Docker Compose que você criou
+            # O --build garante que ele reconstrua a imagem com o código novo
+            sudo docker-compose up -d --build
+            
+            # Limpeza básica de imagens antigas para não encher o disco da EC2
+            sudo docker image prune -f

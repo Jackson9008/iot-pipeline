@@ -8,21 +8,14 @@ services:
       POSTGRES_USER: iot_user
       POSTGRES_PASSWORD: iot_pass
       POSTGRES_DB: iot_db
-    # Porta 5432 interna apenas para segurança
 
   dashboard:
     build: .
     container_name: streamlit-app
     ports:
       - "8501:8501"
-    environment:
-      - DB_HOST=postgres
-      - DB_NAME=iot_db
-      - DB_USER=iot_user
-      - DB_PASS=iot_pass
     depends_on:
       - postgres
-    # Este comando desabilita a proteção que estava pedindo senha/travando na AWS
     command: >
       streamlit run dashboard.py 
       --server.port 8501 

@@ -9,19 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout do código para que o GitHub possa ler seus arquivos
+      # 1. Checkout do código
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. DEVSECOPS: Scanner de segurança na imagem Docker ou dependências
-      # Isso verifica se o seu Python ou bibliotecas têm brechas conhecidas.
+      # 2. DEVSECOPS: Scanner de segurança (Trivy)
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs' # Escaneia o sistema de arquivos do projeto
+          scan-type: 'fs'
           format: 'table'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0' # Mude para '1' se quiser travar o deploy caso ache falhas graves
+          exit-code: '0'
 
       # 3. DEPLOY: Conecta na AWS e atualiza o serviço
       - name: Deploy to AWS EC2 via SSH
@@ -30,14 +29,15 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Script que será executado dentro da sua máquina na AWS
           script: |
-            # Instalar Docker e Git caso não existam (comum em instâncias novas)
+            # Instalar Docker e Git na Amazon Linux 2023 caso não existam
             if ! [ -x "$(command -v docker)" ]; then
-              sudo apt-get update
-              sudo apt-get install -y docker.io docker-compose git
+              sudo dnf update -y
+              sudo dnf install -y docker git
               sudo systemctl start docker
-              sudo usermod -aG docker $USER
+              sudo systemctl enable docker
+              sudo usermod -aG docker ec2-user
+              sudo dnf install -y docker-compose-plugin
             fi
 
             # Gerenciar a pasta do projeto
@@ -49,9 +49,8 @@ jobs:
               git pull origin main
             fi
 
-            # Subir a aplicação usando o Docker Compose que você criou
-            # O --build garante que ele reconstrua a imagem com o código novo
-            sudo docker-compose up -d --build
+            # Comando oficial para Amazon Linux 2023 (Docker Compose V2)
+            sudo docker compose up -d --build
             
-            # Limpeza básica de imagens antigas para não encher o disco da EC2
+            # Limpeza de imagens antigas para economizar espaço na Free Tier
             sudo docker image prune -f

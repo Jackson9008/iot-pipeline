@@ -20,19 +20,20 @@ jobs:
 
       - name: Deploy na EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          
-          cd app
+            ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
 
-          if [ ! -d "meuprojeto" ]; then
-            git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git meuprojeto
-          fi
+              mkdir -p app
+             cd app
 
-          cd meuprojeto
+                if [ ! -d "iot-pipeline" ]; then
+                 git clone https://github.com/Jackson9008/iot-pipeline.git
+                fi
 
-          git pull origin main
+                cd iot-pipeline
 
-          docker-compose down
-          docker-compose up -d --build
+                git pull origin main
 
-          EOF
+                docker compose down || true
+                docker compose up -d --build
+
+                EOF
